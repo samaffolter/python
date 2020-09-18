@@ -1,0 +1,41 @@
+###Generating bootstrap repicates for categorical data
+"""initial setup"""
+import collections, pyreadstat as prs, pandas as pd, numpy as np, matplotlib.pyplot as plt
+test_list = ['ABBV', 'ABBV', 'ACV1', 'ACV1', 'ACV1', 'ACV1', 'ACV1', 'AMKR', 'AMKR', 'AMKR']
+np.random.seed(56)              ###fix randomization point for bootstraps
+data = test_list                ###Insert the data array you want to bootstrap here
+size = 4                        ###Insert size of bootstrap sample you want to draw
+
+"""Generate single bootstrap replicate of 1D-array of categorical data."""
+def bootstrap_replicate(data):
+    bs_sample = np.random.choice(data, len(data))
+    bs_rep = collections.defaultdict(list)                              
+    for value in bs_sample:                            
+        if value not in bs_rep:               
+            bs_rep[value] = 1                       
+        else :                                  
+            bs_rep[value] = bs_rep[value] + 1  
+    return bs_rep
+            
+#bs_rep1 = bootstrap_replicate_vc(data) #check that initial function is working
+#print(bs_rep1)
+
+"""Generate N-size set of bootstrap replicas and output as dataframe
+there is a bug in that arrays where you have small samples of a given value
+can result in a bootstrap replica not containing that value. In this case the 
+code below will err out, with ValueError: arrays must all be same length. 
+A specific example is taking the test_list above with a sample size of 10000."""
+
+def generate_bs_reps_categorical(data, size=1):
+    # Initialize array of replicates: bs_replicates
+    bs_reps = collections.defaultdict(list)
+    # Generate replicates
+    for i in range(size):
+        bs_rep = bootstrap_replicate(data)
+        for key, value in bs_rep.items():
+            bs_reps[key].append(value)
+    bs_reps = pd.DataFrame.from_dict(bs_reps)
+    return bs_reps
+
+test = generate_bs_reps_categorical(data, size)
+bs_description = test.describe()
